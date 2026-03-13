@@ -1,83 +1,140 @@
-# AI Platform Engineering Copilot -- Project Proposal
+# AI Platform Engineering Copilot -- 프로젝트 제안서
 
-Backend and AI platform engineers frequently perform repetitive tasks
-such as drafting API specifications, designing RAG metadata
-configurations, and diagnosing runtime errors.\
-This project builds a **tool-augmented AI agent** that assists these
-engineering workflows through structured reasoning and domain-specific
-tools.
+이 프로젝트는 **AI 에이전트 아키텍처를 학습**하면서, 동시에
+**실제 백엔드 엔지니어링 문제를 해결**하는 것을 목표로 한다.
 
-The goal of this project is to explore **AI agent architecture while
-solving real backend engineering problems**.
+에이전트 개념을 이론적으로만 학습하는 대신, 백엔드 및 AI 플랫폼 엔지니어의
+일상적인 업무 -- API 설계, 배포 계획, 코드 리뷰, 에러 분석 -- 를 지원하는
+**도구 기반 AI 에이전트(tool-augmented AI agent)**를 직접 구축한다.
+학습은 만들면서 이루어진다.
 
 ------------------------------------------------------------------------
 
-# 1. Problem Statement
+# 1. 동기 (Motivation)
 
-In AI service development and backend platform engineering, developers
-repeatedly perform tasks such as:
+백엔드 및 AI 플랫폼 엔지니어는 반복적이고, 도메인 지식이 필요하며,
+일관성 없는 결과를 만들어내기 쉬운 작업들을 반복적으로 수행한다.
+동시에, AI 에이전트 아키텍처 -- 도구 기반 추론, 구조화된 출력,
+오케스트레이션 패턴 -- 는 LLM을 다루는 엔지니어에게 필수적인
+역량이 되어가고 있다.
 
--   Drafting REST API specifications
--   Designing response schema and field naming
--   Configuring model parameters and capabilities
--   Designing RAG metadata settings
--   Investigating runtime errors and dependency issues
--   Preparing design or deployment checklists
+이 프로젝트는 두 가지 필요를 동시에 충족한다:
 
-These tasks:
+-   **엔지니어링 가치**: 반복적인 플랫폼 엔지니어링 작업을 일관된
+    구조화 출력으로 자동화
+-   **학습 가치**: 에이전트 오케스트레이션, 도구 시스템, 구조화된
+    추론 파이프라인을 직접 설계하는 실전 경험
 
--   Are repetitive
--   Require domain knowledge
--   Consume significant time
--   Often result in inconsistent design decisions
+범용 챗봇을 만드는 것이 아니라, **AI 에이전트로 실제 엔지니어링
+문제를 해결**하면서 다음을 증명하는 것이 목표이다:
 
-This project aims to build an **AI agent that assists these engineering
-tasks** by combining:
-
--   LLM reasoning
--   domain-specific rules
--   tool-based workflows
--   structured outputs
+-   백엔드 시스템 설계 역량
+-   AI 에이전트 아키텍처 이해
+-   도구 기반 추론(tool-augmented reasoning) 구현 능력
+-   도메인 특화 AI 응용
 
 ------------------------------------------------------------------------
 
-# 2. Project Goals
+# 2. 문제 정의 (Problem Statement)
 
-## Primary goals
+AI 서비스 개발 및 백엔드 플랫폼 엔지니어링에서, 개발자는 다음과 같은
+작업을 반복적으로 수행한다:
 
--   Build a **backend-focused AI agent**
--   Design a **tool-augmented agent architecture**
--   Implement **structured reasoning and output validation**
--   Explore practical applications of AI agents for engineering
-    workflows
+-   REST API 명세 작성
+-   응답 스키마 및 필드 네이밍 설계
+-   배포 체크리스트 및 롤백 계획 생성
+-   API 코드의 일관성 및 모범 사례 리뷰
+-   런타임 에러 및 의존성 문제 조사
 
-## Secondary goals
+이러한 작업들은:
 
--   Learn agent orchestration patterns
--   Build an extensible system for future capabilities
--   Demonstrate engineering thinking in an AI project
+-   반복적이다
+-   도메인 지식이 필요하다
+-   상당한 시간을 소모한다
+-   일관성 없는 설계 결정을 초래하기 쉽다
+
+이 프로젝트는 다음을 결합하여 이러한 엔지니어링 작업을 지원하는
+**AI 에이전트를 구축**하는 것을 목표로 한다:
+
+-   LLM 추론
+-   도메인 특화 규칙
+-   도구 기반 워크플로우
+-   구조화된 출력
 
 ------------------------------------------------------------------------
 
-# 3. Key Use Cases
+# 3. 프로젝트 목표 및 성공 기준
 
-The agent focuses on **backend and AI platform engineering tasks**.
+## 학습 목표
 
-## 3.1 API Specification Drafting
+-   에이전트 오케스트레이션 패턴 이해 (classify → plan → execute → validate)
+-   도구 기반 에이전트 아키텍처 설계 및 구현
+-   구조화된 추론 및 출력 검증 파이프라인 실습
+-   프로덕션 유사 시스템에서의 LLM 통합 경험 축적
 
-Input
+## 실용 목표
 
-    Design an API that returns models grouped by provider.
+-   실제 엔지니어링 작업을 처리하는 **백엔드 특화 AI 에이전트** 구축
+-   최소 **4개 유스케이스** 구현 (API 설계, 배포 체크리스트, 코드 리뷰,
+    에러 분석)
+-   모든 에이전트 응답에 대해 **구조화되고 검증된 JSON 출력** 제공
+-   향후 기능 추가가 용이한 확장 가능한 시스템 구축
 
-Output
+## 성공 기준
 
--   endpoint suggestion
--   request schema
--   response schema
--   field naming suggestions
--   design risks
+| 기준 | 목표 |
+|---|---|
+| 유스케이스 커버리지 | 4개 핵심 유스케이스 완전 구현 |
+| 출력 유효성 | 응답 100%가 Pydantic 스키마 검증 통과 |
+| 도구 통합 | 각 유스케이스가 최소 1개 도메인 특화 도구 사용 |
+| 응답 품질 | 에이전트 출력이 실행 가능하고 도메인에 적합 (수동 리뷰) |
+| 확장성 | 새로운 유스케이스 추가 시 3개 미만 파일 수정 |
 
-Example output:
+------------------------------------------------------------------------
+
+# 4. 범위 및 비목표 (Scope & Non-Goals)
+
+## 범위 내 (In Scope)
+
+-   단일 턴 에이전트 인터랙션 (사용자 요청 → 에이전트 응답)
+-   4개 핵심 유스케이스: API 설계, 배포 체크리스트, 코드 리뷰, 에러 분석
+-   도메인 특화 도구를 활용한 도구 기반 추론
+-   스키마 검증이 포함된 구조화된 JSON 출력
+-   FastAPI 기반 REST API 인터페이스
+
+## 비목표 (Non-Goals)
+
+-   **멀티턴 대화 / 채팅 메모리** -- 챗봇이 아닌 단일 요청 에이전트
+-   **프로덕션 배포** -- 학습과 프로토타이핑에 집중, 프로덕션급 인프라 불필요
+-   **커스텀 모델 파인튜닝/학습** -- 기존 LLM API를 그대로 사용
+-   **프론트엔드 UI** -- API 전용 인터페이스; 데모에는 Swagger UI로 충분
+-   **코드 실행 / 샌드박스** -- 에이전트는 조언만 제공하고 코드를 실행하지 않음
+
+------------------------------------------------------------------------
+
+# 5. 핵심 유스케이스
+
+에이전트는 **백엔드 및 AI 플랫폼 엔지니어링 작업**에 집중한다.
+
+## 5.1 API 명세 작성 (API Specification Drafting)
+
+**왜 에이전트인가?** API 설계는 네이밍 규칙, REST 모범 사례, 응답 구조
+패턴, 도메인 컨텍스트를 균형 있게 다뤄야 한다. 에이전트는 도구를 통해
+이 규칙들을 일관되게 적용하고, LLM은 창의적인 설계 추론을 담당한다.
+
+입력
+
+    모델을 프로바이더별로 그룹화하여 반환하는 API를 설계해줘.
+
+출력
+
+-   엔드포인트 제안
+-   요청 스키마
+-   응답 스키마
+-   필드 네이밍 제안
+-   설계 리스크
+
+출력 예시:
 
 ``` json
 {
@@ -95,373 +152,148 @@ Example output:
 
 ------------------------------------------------------------------------
 
-## 3.2 RAG Metadata Configuration
+## 5.2 배포 체크리스트 생성 (Deployment Checklist Generation)
 
-Input
+**왜 에이전트인가?** 배포 체크리스트는 서비스 유형, 의존성, 배포 전략에
+따라 달라진다. 도구가 재사용 가능한 체크리스트 템플릿을 주입하고,
+LLM이 특정 서비스 컨텍스트에 맞게 커스터마이즈한다.
 
-    Field type: String
-    Needs to support filtering and sorting
+입력
 
-Output
+    서비스: user-auth-service
+    의존성: PostgreSQL, Redis, 외부 OAuth 프로바이더
+    유형: 최초 배포
 
--   valid configuration flags
--   recommended settings
--   rule validation results
+출력
 
-Example
+-   배포 전 검증 항목
+-   환경 변수 체크리스트
+-   의존성 헬스 체크
+-   롤백 계획
+-   배포 후 모니터링 항목
 
-    visible: true
-    searchable: true
-    filterable: true
-    facetable: true
-    sortable: true
-
-------------------------------------------------------------------------
-
-## 3.3 Error Analysis
-
-Input
-
-    uv add faiss dependency resolution error
-
-Output
-
--   suspected causes
--   troubleshooting steps
--   recommended fixes
-
-Example
-
-    Possible cause:
-    faiss wheels are not available for Python 3.12
-
-    Suggested solution:
-    Use faiss-cpu or downgrade Python version.
-
-------------------------------------------------------------------------
-
-# 4. System Overview
-
-The system is built around a **single AI agent orchestrator** that
-manages task classification, tool usage, and LLM interaction.
-
-High-level workflow:
-
-    User Request
-         ↓
-    FastAPI Endpoint
-         ↓
-    Agent Orchestrator
-         ↓
-    Task Classification
-         ↓
-    Prompt Construction
-         ↓
-    Tool Calls (optional)
-         ↓
-    LLM Generation
-         ↓
-    Structured Output Parsing
-         ↓
-    Response
-
-------------------------------------------------------------------------
-
-# 5. Architecture
-
-## 5.1 Components
-
-### API Layer
-
-FastAPI server that exposes agent endpoints.
-
-Responsibilities:
-
--   request validation
--   session handling
--   response delivery
-
-Example endpoint:
-
-    POST /agent/run
-
-------------------------------------------------------------------------
-
-### Agent Orchestrator
-
-Central component that manages agent workflow.
-
-Responsibilities:
-
--   classify tasks
--   build prompts
--   call tools
--   interact with LLM
--   parse structured outputs
-
-------------------------------------------------------------------------
-
-### Task Classifier
-
-Determines which workflow should be executed.
-
-Task types:
-
-    api_design
-    rag_configuration
-    error_analysis
-
-------------------------------------------------------------------------
-
-### Tool System
-
-Domain-specific tools that assist the LLM.
-
-Tools provide:
-
--   reusable templates
--   rule validation
--   engineering knowledge
-
-Examples:
-
--   API Template Tool
--   Naming Advisor Tool
--   RAG Rule Checker
--   Error Knowledge Tool
-
-------------------------------------------------------------------------
-
-### LLM Client
-
-Abstraction layer for LLM providers.
-
-Responsibilities:
-
--   prompt submission
--   response retrieval
--   model switching
-
-Possible providers:
-
--   OpenAI
--   local LLM
--   other APIs
-
-------------------------------------------------------------------------
-
-### Output Parser
-
-Ensures LLM responses follow strict structured formats.
-
-This enables:
-
--   deterministic processing
--   easier debugging
--   reliable downstream usage
-
-------------------------------------------------------------------------
-
-# 6. Project Structure
-
-    ai-platform-copilot
-    │
-    ├─ app
-    │
-    │  ├─ api
-    │  │  └─ agent_router.py
-    │
-    │  ├─ agent
-    │  │  ├─ orchestrator.py
-    │  │  ├─ classifier.py
-    │  │  ├─ prompt_builder.py
-    │  │  └─ output_parser.py
-    │
-    │  ├─ tools
-    │  │  ├─ base.py
-    │  │  ├─ template_tool.py
-    │  │  └─ rag_rule_tool.py
-    │
-    │  ├─ schemas
-    │  │  ├─ request.py
-    │  │  └─ response.py
-    │
-    │  └─ core
-    │     ├─ config.py
-    │     └─ llm_client.py
-    │
-    ├─ examples
-    ├─ tests
-    └─ main.py
-
-------------------------------------------------------------------------
-
-# 7. Data Model
-
-## AgentRequest
-
-  Field        Description
-  ------------ ----------------------
-  id           request id
-  session_id   conversation session
-  input        user query
-  task_type    classified task
-  created_at   timestamp
-
-------------------------------------------------------------------------
-
-## AgentResponse
-
-  Field         Description
-  ------------- --------------------
-  id            response id
-  request_id    associated request
-  summary       short explanation
-  assumptions   assumptions made
-  result        structured result
-  risks         design risks
-
-------------------------------------------------------------------------
-
-## ToolCallLog
-
-Tracks tool usage.
-
-  Field       Description
-  ----------- ------------------
-  tool_name   tool used
-  input       tool input
-  output      tool output
-  success     execution result
-
-------------------------------------------------------------------------
-
-# 8. Structured Output Format
-
-The agent always returns responses in JSON format.
-
-Example:
+출력 예시:
 
 ``` json
 {
-  "task_type": "api_design",
-  "summary": "API for listing models grouped by provider",
-  "assumptions": [
-    "Client UI groups models by provider"
+  "pre_deployment": [
+    "DB 마이그레이션 스크립트가 멱등성을 보장하는지 확인",
+    "프로덕션 부하에 맞는 Redis 커넥션 풀 설정 확인"
   ],
-  "result": {
-    "endpoint": "GET /api/v1/models"
+  "env_check": [
+    "DATABASE_URL",
+    "REDIS_URL",
+    "OAUTH_CLIENT_SECRET"
+  ],
+  "rollback_plan": {
+    "strategy": "blue-green",
+    "steps": [
+      "로드 밸런서를 이전 배포로 전환",
+      "롤백 DB 마이그레이션 존재 여부 확인"
+    ]
   },
-  "risks": [
-    "Provider enum consistency required"
+  "monitoring": [
+    "첫 30분간 5xx 비율 > 1% 알림 설정",
+    "OAuth 콜백 레이턴시 p99 모니터링"
   ]
 }
 ```
 
-Benefits:
+------------------------------------------------------------------------
 
--   consistent responses
--   easier validation
--   easier integration
+## 5.3 코드 리뷰 지원 (Code Review Assist)
+
+**왜 에이전트인가?** 코드 리뷰는 보안, 네이밍, 에러 처리, 일관성 등
+여러 차원을 동시에 검토해야 한다. 도구가 리뷰 규칙과 프로젝트 컨벤션을
+인코딩하고, LLM이 이를 특정 코드에 어떻게 적용할지 추론한다.
+
+입력
+
+    이 엔드포인트를 일관성 및 모범 사례 관점에서 리뷰해줘:
+
+    @router.post("/users")
+    async def create_user(data: dict):
+        user = db.execute(f"INSERT INTO users VALUES ('{data['name']}')")
+        return {"id": user.id}
+
+출력
+
+-   네이밍 규칙 이슈
+-   보안 취약점
+-   에러 처리 미비
+-   스키마 검증 제안
+-   프로젝트 컨벤션과의 일관성
+
+출력 예시:
+
+``` json
+{
+  "issues": [
+    {
+      "severity": "critical",
+      "type": "security",
+      "description": "문자열 보간을 통한 SQL 인젝션 취약점",
+      "suggestion": "파라미터화된 쿼리 또는 ORM 메서드 사용"
+    },
+    {
+      "severity": "warning",
+      "type": "validation",
+      "description": "요청 바디에 타입이 없는 dict 대신 Pydantic 모델 사용 필요",
+      "suggestion": "필드 검증이 포함된 CreateUserRequest 스키마 정의"
+    },
+    {
+      "severity": "info",
+      "type": "error_handling",
+      "description": "사용자 중복 또는 DB 실패에 대한 에러 처리 없음",
+      "suggestion": "적절한 HTTP 상태 코드와 함께 try/except 추가"
+    }
+  ]
+}
+```
 
 ------------------------------------------------------------------------
 
-# 9. Technology Stack
+## 5.4 에러 분석 (Error Analysis)
 
-Backend
+**왜 에이전트인가?** 런타임 에러는 종종 버전 호환성, 알려진 이슈,
+플랫폼별 특이사항을 교차 참조해야 한다. 지식 도구가 이 컨텍스트를
+제공하고, LLM이 진단을 종합한다.
 
--   Python
--   FastAPI
--   Pydantic
+입력
 
-Agent System
+    uv add faiss 의존성 해결 에러
 
--   Custom agent orchestrator
--   Tool-based architecture
+출력
 
-Infrastructure
+-   의심되는 원인
+-   문제 해결 단계
+-   권장 수정사항
 
--   uv (dependency management)
--   Docker (optional)
+출력 예시:
 
-Storage
+    가능한 원인:
+    faiss wheel이 Python 3.12에서 사용 불가
 
--   SQLite or PostgreSQL
-
-------------------------------------------------------------------------
-
-# 10. Development Phases
-
-## Phase 1 -- MVP
-
-Features:
-
--   FastAPI endpoint
--   task classification
--   API spec generation
--   structured output
+    제안 해결책:
+    faiss-cpu를 사용하거나 Python 버전을 다운그레이드.
 
 ------------------------------------------------------------------------
 
-## Phase 2 -- Tool Integration
+## 5.5 예시: CSV 메타데이터 임포트 API
 
-Features:
+이 예시는 에이전트가 보다 복잡한 API 설계 요청을 어떻게 처리하는지
+보여준다.
 
--   template tools
--   naming advisor
--   RAG rule checker
+입력
 
-------------------------------------------------------------------------
+    CSV를 통해 여러 메타데이터 필드를 업로드하는 API를 설계해줘.
 
-## Phase 3 -- Agent Improvements
+에이전트 출력
 
-Features:
-
--   session memory
--   knowledge search
--   tool routing logic
--   evaluation dataset
-
-------------------------------------------------------------------------
-
-# 11. Future Extensions
-
-Potential improvements:
-
--   vector search for documentation
--   multi-step planning agents
--   automatic code generation
--   codebase search integration
--   evaluation and benchmarking
-
-------------------------------------------------------------------------
-
-# 12. Project Motivation
-
-This project aims to demonstrate:
-
--   backend system design
--   AI agent architecture
--   tool-augmented reasoning
--   domain-specific AI applications
-
-Rather than building a generic chatbot, this project focuses on
-**solving real engineering problems with AI agents**.
-
-------------------------------------------------------------------------
-
-# 13. Example Interaction
-
-User input
-
-    Design an API for uploading multiple metadata fields through CSV.
-
-Agent output
-
-    Endpoint:
+    엔드포인트:
     POST /api/v1/metadata/import
 
-    Response:
+    응답:
     {
       "created_count": 10,
       "invalid_type_count": 2,
@@ -471,6 +303,135 @@ Agent output
 
 ------------------------------------------------------------------------
 
-# 14. License
+# 6. 시스템 개요 (System Overview)
 
-MIT
+시스템은 태스크 분류, 도구 사용, LLM 상호작용을 관리하는 **단일 AI
+에이전트 오케스트레이터**를 중심으로 구축된다.
+
+상위 워크플로우:
+
+    사용자 요청
+         |
+         v
+    FastAPI 엔드포인트
+         |
+         v
+    에이전트 오케스트레이터
+         |
+         v
+    태스크 분류
+         |
+         v
+    프롬프트 구성
+         |
+         v
+    도구 호출 (선택)
+         |
+         v
+    LLM 생성
+         |
+         v
+    구조화된 출력 파싱
+         |
+         v
+    출력 검증 ---------> [검증 실패]
+         |                    |
+         v                    v
+    응답 반환           재시도 / 에러 응답
+
+**출력 검증 단계**는 모든 응답이 예상된 Pydantic 스키마에 부합하는지
+확인한 후 반환한다. 검증에 실패하면 시스템은 수정 프롬프트로 재시도하거나
+구조화된 에러 응답을 반환할 수 있다.
+
+------------------------------------------------------------------------
+
+# 7. 아키텍처 (Architecture)
+
+시스템은 다음 핵심 컴포넌트로 구성된다:
+
+-   **API 계층** -- 요청 검증, 세션 처리, 응답 전달을 담당하는 FastAPI 서버
+-   **에이전트 오케스트레이터** -- 태스크 분류, 프롬프트 구성, 도구 호출,
+    LLM 상호작용, 구조화된 출력 파싱을 관리하는 중앙 컨트롤러
+-   **태스크 분류기** -- 실행할 워크플로우 결정
+    (api_design, deployment_checklist, code_review, error_analysis)
+-   **도구 시스템** -- 재사용 가능한 템플릿, 규칙 검증, 엔지니어링 지식을
+    제공하는 도메인 특화 도구
+-   **LLM 클라이언트** -- LLM 프로바이더(OpenAI, 로컬 LLM 등)에 대한
+    추상화 계층
+-   **출력 파서** -- 결정적 처리를 위해 LLM 응답이 엄격한 구조화된
+    형식을 따르도록 보장
+
+상세한 아키텍처 다이어그램, 컴포넌트 간 상호작용, 데이터 모델,
+프로젝트 구조, 구조화된 출력 형식은
+[docs/architecture.md](architecture.md)를 참조한다.
+
+------------------------------------------------------------------------
+
+# 8. 기술 스택 (Technology Stack)
+
+백엔드
+
+-   Python
+-   FastAPI
+-   Pydantic
+
+에이전트 시스템
+
+-   커스텀 에이전트 오케스트레이터
+-   도구 기반 아키텍처
+
+인프라
+
+-   uv (의존성 관리)
+-   Docker (선택)
+
+스토리지
+
+-   SQLite 또는 PostgreSQL
+
+------------------------------------------------------------------------
+
+# 9. 개발 단계 (Development Phases)
+
+## Phase 1 -- MVP (1-2주차)
+
+주요 기능:
+
+-   FastAPI 엔드포인트
+-   태스크 분류
+-   API 명세 생성
+-   구조화된 출력
+
+------------------------------------------------------------------------
+
+## Phase 2 -- 도구 통합 (3-4주차)
+
+주요 기능:
+
+-   템플릿 도구
+-   네이밍 어드바이저
+-   배포 체크리스트 도구
+-   코드 리뷰 규칙 도구
+
+------------------------------------------------------------------------
+
+## Phase 3 -- 에이전트 개선 (5-6주차)
+
+주요 기능:
+
+-   세션 메모리
+-   지식 검색
+-   도구 라우팅 로직
+-   평가 데이터셋
+
+------------------------------------------------------------------------
+
+# 10. 향후 확장 (Future Extensions)
+
+잠재적 개선사항:
+
+-   문서 벡터 검색
+-   멀티스텝 플래닝 에이전트
+-   자동 코드 생성
+-   코드베이스 검색 통합
+-   평가 및 벤치마킹
