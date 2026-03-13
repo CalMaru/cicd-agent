@@ -269,6 +269,50 @@ class AgentOrchestrator:
 
 ------------------------------------------------------------------------
 
+## Day 2 API 테스트 예시
+
+서버 실행:
+
+```bash
+uvicorn main:app --reload
+```
+
+Swagger UI: http://localhost:8000/docs
+
+### API Design
+
+```bash
+curl -X POST http://localhost:8000/agent/run \
+  -H "Content-Type: application/json" \
+  -d '{"input": "모델을 프로바이더별로 그룹화하여 반환하는 API를 설계해줘"}'
+```
+
+### Deployment Checklist
+
+```bash
+curl -X POST http://localhost:8000/agent/run \
+  -H "Content-Type: application/json" \
+  -d '{"input": "서비스: user-auth-service, 의존성: PostgreSQL, Redis, 외부 OAuth 프로바이더. 최초 배포 체크리스트를 생성해줘"}'
+```
+
+### Code Review
+
+```bash
+curl -X POST http://localhost:8000/agent/run \
+  -H "Content-Type: application/json" \
+  -d '{"input": "이 엔드포인트를 리뷰해줘: @router.post(/users) async def create_user(data: dict): user = db.execute(f\"INSERT INTO users VALUES ({data[name]})\")"}'
+```
+
+### Error Analysis
+
+```bash
+curl -X POST http://localhost:8000/agent/run \
+  -H "Content-Type: application/json" \
+  -d '{"input": "uv add faiss 의존성 해결 에러가 발생합니다"}'
+```
+
+------------------------------------------------------------------------
+
 # Day 3 --- 구조화된 출력 시스템
 
 ## 목표

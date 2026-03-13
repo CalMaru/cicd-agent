@@ -1,4 +1,5 @@
 from pydantic import BaseModel
 
 
-class AgentRequest(BaseModel): ...
+class AgentRequest(BaseModel):
+    input: str
