@@ -1,157 +1,166 @@
 # AI Platform Engineering Copilot
 
-## Week 1 Development Plan (Detailed)
+## Week 1 개발 계획 (상세)
 
-This document describes the **Day-by-Day development plan for Week 1**
-of the project.
+이 문서는 프로젝트 **Week 1의 일별 개발 계획**을 기술한다.
 
-The goal of Week 1 is to build a **working Agent MVP** that
-demonstrates:
+Week 1의 목표는 다음을 시연하는 **동작하는 에이전트 MVP**를 구축하는 것이다:
 
--   Agent workflow
--   Structured outputs
--   FastAPI interface
--   Basic tool integration
+- 에이전트 워크플로우 (classify → plan → execute → validate)
+- 구조화된 출력 및 검증
+- FastAPI 인터페이스
+- 기본 도구 통합
 
-The system does **not need to be feature complete**.\
-The primary objective is to build a **clean and extensible agent
-architecture**.
+시스템이 **기능적으로 완벽할 필요는 없다**.\
+핵심 목표는 **깔끔하고 확장 가능한 에이전트 아키텍처**를 구축하는 것이다.
 
 ------------------------------------------------------------------------
 
-# Week 1 Objective
+# Week 1 목표
 
-By the end of Week 1 the system should support:
+Week 1 종료 시 시스템이 지원해야 하는 항목:
 
-1.  FastAPI endpoint for agent execution
-2.  Agent workflow (classification → prompt → LLM → structured output)
-3.  One real capability (API specification drafting)
-4.  One tool integration
-5.  Structured JSON output
-6.  Request/response logging
-
-------------------------------------------------------------------------
-
-# System Workflow (Target)
-
-    User Request
-         ↓
-    FastAPI Endpoint
-         ↓
-    Agent Orchestrator
-         ↓
-    Task Classification
-         ↓
-    Prompt Builder
-         ↓
-    Optional Tool Call
-         ↓
-    LLM Generation
-         ↓
-    Structured Output Parsing
-         ↓
-    Response
+1. 에이전트 실행을 위한 FastAPI 엔드포인트
+2. 에이전트 워크플로우 (분류 → 프롬프트 구성 → LLM 생성 → 구조화된 출력 → 출력 검증)
+3. 하나의 실제 기능 (API 명세 작성)
+4. 하나의 도구 통합
+5. Pydantic 스키마 검증을 포함한 구조화된 JSON 출력
+6. 요청/응답 로깅
 
 ------------------------------------------------------------------------
 
-# Recommended Repository Structure
+# 시스템 워크플로우 (목표)
 
-    ai-platform-copilot
-    │
-    ├ app
-    │
-    │  ├ api
-    │  │  └ agent_router.py
-    │
-    │  ├ agent
-    │  │  ├ orchestrator.py
-    │  │  ├ classifier.py
-    │  │  ├ prompt_builder.py
-    │  │  └ output_parser.py
-    │
-    │  ├ tools
-    │  │  ├ base.py
-    │  │  └ api_template_tool.py
-    │
-    │  ├ schemas
-    │  │  ├ request.py
-    │  │  └ response.py
-    │
-    │  └ core
-    │     ├ config.py
-    │     └ llm_client.py
-    │
-    ├ docs
-    ├ examples
-    ├ tests
-    └ main.py
+```
+사용자 요청
+     |
+     v
+FastAPI 엔드포인트
+     |
+     v
+에이전트 오케스트레이터
+     |
+     v
+태스크 분류
+     |
+     v
+프롬프트 구성
+     |
+     v
+도구 호출 (선택)
+     |
+     v
+LLM 생성
+     |
+     v
+구조화된 출력 파싱
+     |
+     v
+출력 검증 ---------> [검증 실패]
+     |                    |
+     v                    v
+응답 반환           재시도 / 에러 응답
+```
 
-------------------------------------------------------------------------
-
-# Day 1 --- Project Setup and Base Architecture
-
-## Goal
-
-Create the **project skeleton and base infrastructure**.
-
-## Tasks
-
-### 1. Create project repository
-
-    ai-platform-copilot
-
-Initialize git repository and create:
-
-    README.md
-    docs/
-    app/
-    tests/
-    examples/
+**출력 검증 단계**는 모든 응답이 예상된 Pydantic 스키마에 부합하는지
+확인한 후 반환한다. 검증에 실패하면 시스템은 수정 프롬프트로 재시도하거나
+구조화된 에러 응답을 반환할 수 있다.
 
 ------------------------------------------------------------------------
 
-### 2. Initialize Python project
+# 권장 리포지토리 구조
 
-Recommended tools:
-
--   Python 3.11+
--   uv (dependency manager)
-
-Example:
-
-    uv init
-
-Install dependencies:
-
-    uv add fastapi uvicorn pydantic httpx
-
-------------------------------------------------------------------------
-
-### 3. Create FastAPI server
-
-File:
-
-    main.py
-
-Example:
-
-``` python
-from fastapi import FastAPI
-from app.api.agent_router import router
-
-app = FastAPI()
-app.include_router(router)
+```
+ai-platform-copilot
+│
+├ app
+│
+│  ├ api
+│  │  ├ app.py
+│  │  └ agent/
+│  │     ├ router.py
+│  │     └ schemas.py
+│  │
+│  ├ agent
+│  │  ├ orchestrator.py
+│  │  ├ classifier.py
+│  │  ├ prompt_builder.py
+│  │  └ output_parser.py
+│  │
+│  ├ tools
+│  │  ├ base.py
+│  │  └ template_tool.py
+│  │
+│  ├ schemas
+│  │  ├ request.py
+│  │  └ response.py
+│  │
+│  └ core
+│     ├ config.py
+│     └ llm_client.py
+│
+├ docs
+├ examples
+├ tests
+└ main.py
 ```
 
 ------------------------------------------------------------------------
 
-### 4. Create base endpoint
+# Day 1 --- 프로젝트 셋업 및 기본 아키텍처 ✅
 
-File:
+> **상태: 완료**
 
-    app/api/agent_router.py
+## 목표
 
-Example:
+**프로젝트 스켈레톤과 기본 인프라** 구축.
+
+## 완료된 작업
+
+### 1. 프로젝트 리포지토리 생성
+
+Git 리포지토리 초기화 및 기본 디렉토리 구조 생성 완료:
+
+```
+app/
+├── __init__.py
+├── api/
+│   ├── app.py
+│   └── agent/
+│       ├── router.py
+│       └── schemas.py
+├── agent/
+│   ├── orchestrator.py
+│   ├── classifier.py
+│   ├── prompt_builder.py
+│   └── output_parser.py
+├── core/
+│   ├── config.py
+│   └── llm_client.py
+└── tools/
+    ├── base.py
+    └── template_tool.py
+```
+
+### 2. Python 프로젝트 초기화
+
+- Python 3.11+
+- uv 패키지 매니저 사용
+- 의존성 설치: `fastapi`, `uvicorn`, `pydantic`, `httpx`
+
+### 3. FastAPI 서버 생성
+
+`app/api/app.py`에 앱 팩토리 패턴 구현:
+
+- `create_app()` 팩토리 함수
+- CORS 미들웨어 설정
+- 커스텀 HTTP 미들웨어
+- 유효성 검증 에러 핸들러
+- 비동기 lifespan 컨텍스트 매니저
+
+### 4. 기본 엔드포인트 생성
+
+`app/api/agent/router.py`에 스텁 엔드포인트 구현:
 
 ``` python
 @router.post("/agent/run")
@@ -159,286 +168,338 @@ async def run_agent(request: AgentRequest):
     return {"status": "ok"}
 ```
 
-------------------------------------------------------------------------
+### Day 1 결과물
 
-### Day 1 Deliverable
-
-You should be able to run:
-
-    uvicorn main:app --reload
-
-Swagger should show:
-
-    POST /agent/run
+- `uvicorn main:app --reload`로 서버 실행 가능
+- Swagger UI에서 `POST /agent/run` 확인 가능
 
 ------------------------------------------------------------------------
 
-# Day 2 --- Agent Core Design
+# Day 2 --- 에이전트 코어 설계
 
-## Goal
+## 목표
 
-Implement the **Agent workflow controller**.
+**에이전트 워크플로우 컨트롤러** 구현.
 
 ------------------------------------------------------------------------
 
-## Create Agent Orchestrator
+## 태스크 분류기 구현
 
-File:
+파일: `app/agent/classifier.py`
 
-    app/agent/orchestrator.py
+태스크 유형 (프로젝트 제안서 Section 5 기반):
 
-Responsibilities:
+| 태스크 유형 | 설명 | 참조 |
+|---|---|---|
+| `api_design` | REST API 명세 작성 | Section 5.1 |
+| `deployment_checklist` | 배포 체크리스트 생성 | Section 5.2 |
+| `code_review` | 코드 리뷰 지원 | Section 5.3 |
+| `error_analysis` | 에러 분석 및 진단 | Section 5.4 |
 
--   run agent pipeline
--   coordinate components
+초기 구현은 **규칙 기반**(키워드 매칭)으로 시작한다.
 
-Example structure:
+구현 가이드:
 
 ``` python
-class AgentOrchestrator:
+from enum import Enum
 
-    async def run(self, request):
+class TaskType(str, Enum):
+    API_DESIGN = "api_design"
+    DEPLOYMENT_CHECKLIST = "deployment_checklist"
+    CODE_REVIEW = "code_review"
+    ERROR_ANALYSIS = "error_analysis"
 
-        task = classify_task(request.input)
+def classify_task(user_input: str) -> TaskType:
+    """
+    사용자 입력을 분석하여 태스크 유형을 결정한다.
 
-        prompt = build_prompt(task, request.input)
-
-        result = await llm.generate(prompt)
-
-        parsed = parse_output(result)
-
-        return parsed
+    키워드 기반 분류:
+    - api, endpoint, 명세, 스키마 → api_design
+    - 배포, deploy, checklist, 롤백 → deployment_checklist
+    - 리뷰, review, 코드 → code_review
+    - 에러, error, 버그, 의존성 → error_analysis
+    """
+    ...
 ```
 
 ------------------------------------------------------------------------
 
-## Create Task Classifier
+## 에이전트 오케스트레이터 구현
 
-File:
+파일: `app/agent/orchestrator.py`
 
-    app/agent/classifier.py
+오케스트레이터는 에이전트 파이프라인의 각 단계를 조율한다.
 
-Initial task types:
+구현 가이드:
 
-    api_design
-    rag_configuration
-    error_analysis
+``` python
+from app.agent.classifier import classify_task, TaskType
+from app.agent.prompt_builder import build_prompt
+from app.agent.output_parser import parse_output
 
-First implementation can be rule-based.
+class AgentOrchestrator:
+
+    async def run(self, request: AgentRequest) -> AgentResult:
+        # 1. 태스크 분류
+        task_type = classify_task(request.input)
+
+        # 2. 태스크 유형에 따른 프롬프트 구성
+        prompt = build_prompt(task_type, request.input)
+
+        # 3. LLM 호출
+        raw_output = await self.llm_client.generate(prompt)
+
+        # 4. 구조화된 출력 파싱
+        result = parse_output(raw_output, task_type)
+
+        return result
+```
+
+각 함수(`classify_task`, `build_prompt`, `parse_output`)는 해당 모듈에서
+구현한다. Day 2에서는 mock LLM 출력으로 파이프라인 전체 흐름이 동작하는지
+검증한다.
 
 ------------------------------------------------------------------------
 
-### Day 2 Deliverable
+### Day 2 결과물
 
-Agent orchestrator works with mocked LLM output.
-
-------------------------------------------------------------------------
-
-# Day 3 --- Structured Output System
-
-## Goal
-
-Ensure the agent always returns **structured JSON responses**.
+- 태스크 분류기가 4개 태스크 유형을 정확히 분류
+- 오케스트레이터가 mock LLM 출력으로 전체 파이프라인 실행
+- `POST /agent/run` 요청 시 분류 결과가 응답에 포함
 
 ------------------------------------------------------------------------
 
-## Create Response Schema
+# Day 3 --- 구조화된 출력 시스템
 
-File:
+## 목표
 
-    app/schemas/response.py
+에이전트가 항상 **검증된 구조화된 JSON 응답**을 반환하도록 보장한다.
 
-Example:
+------------------------------------------------------------------------
+
+## 응답 스키마 정의
+
+파일: `app/schemas/response.py`
+
+프로젝트 제안서의 성공 기준(Section 3)을 반영한 스키마:
 
 ``` python
 class AgentResult(BaseModel):
+    """에이전트 응답의 기본 구조.
 
-    task_type: str
-    summary: str
-    assumptions: list[str]
-    result: dict
-    risks: list[str]
+    성공 기준:
+    - 응답 100%가 Pydantic 스키마 검증 통과
+    - 에이전트 출력이 실행 가능하고 도메인에 적합
+    """
+
+    task_type: str           # 분류된 태스크 유형
+    summary: str             # 결과 요약
+    assumptions: list[str]   # 에이전트가 가정한 사항
+    result: dict             # 태스크별 구조화된 결과
+    risks: list[str]         # 식별된 리스크
+    confidence: float        # 출력 신뢰도 (0.0 ~ 1.0)
 ```
 
 ------------------------------------------------------------------------
 
-## Create Output Parser
+## 출력 파서 구현
 
-File:
+파일: `app/agent/output_parser.py`
 
-    app/agent/output_parser.py
+책임:
 
-Responsibilities:
+- LLM 출력 파싱
+- Pydantic 스키마 검증
+- **검증 실패 시 피드백 루프** (재시도 또는 구조화된 에러 반환)
 
--   parse LLM output
--   validate schema
-
-Example:
+구현 가이드:
 
 ``` python
-def parse_output(text):
+def parse_output(raw_text: str, task_type: str) -> AgentResult:
+    """LLM 출력을 파싱하고 스키마를 검증한다.
 
-    data = json.loads(text)
-    return AgentResult(**data)
+    검증 실패 시:
+    1. JSON 파싱 에러 → 수정 프롬프트로 재시도
+    2. 스키마 검증 에러 → 누락 필드 명시 후 재시도
+    3. 재시도 실패 → 구조화된 에러 응답 반환
+    """
+    try:
+        data = json.loads(raw_text)
+        return AgentResult(**data)
+    except (json.JSONDecodeError, ValidationError) as e:
+        # 피드백 루프: 에러 정보를 포함한 수정 프롬프트 생성
+        ...
 ```
 
 ------------------------------------------------------------------------
 
-## Update Prompt Format
+## 프롬프트 형식 업데이트
 
-Prompt must enforce strict JSON output.
+프롬프트에 엄격한 JSON 출력을 강제하는 지시문 포함:
 
-Example:
-
-    Return response strictly in JSON format.
-
-------------------------------------------------------------------------
-
-### Day 3 Deliverable
-
-Agent returns validated structured output.
+```
+반드시 JSON 형식으로만 응답하세요.
+다음 필드를 반드시 포함하세요: task_type, summary, assumptions, result, risks, confidence
+```
 
 ------------------------------------------------------------------------
 
-# Day 4 --- API Specification Feature
+### Day 3 결과물
 
-## Goal
-
-Implement the **first real capability**: API specification drafting.
+- 에이전트가 검증된 구조화된 출력을 반환
+- 스키마 검증 실패 시 피드백 루프가 동작 (재시도 또는 에러 응답)
+- `confidence` 필드를 통해 출력 신뢰도 표시
 
 ------------------------------------------------------------------------
 
-## Add API Design Prompt Builder
+# Day 4 --- API 명세 기능
 
-File:
+## 목표
 
-    app/agent/prompt_builder.py
+**첫 번째 실제 기능** 구현: API 명세 작성.
 
-Example:
+------------------------------------------------------------------------
+
+## API 설계 프롬프트 빌더 추가
+
+파일: `app/agent/prompt_builder.py`
 
 ``` python
-def build_api_prompt(user_input):
-
+def build_api_prompt(user_input: str) -> str:
     return f'''
-You are a backend architect.
+당신은 백엔드 아키텍트입니다.
 
-Generate a REST API specification.
+REST API 명세를 생성하세요.
 
-User request:
+사용자 요청:
 {user_input}
 
-Return JSON only.
+JSON 형식으로만 응답하세요.
+다음 항목을 포함하세요:
+- endpoint: 엔드포인트 경로 및 HTTP 메서드
+- request_schema: 요청 스키마 (해당시)
+- response_schema: 응답 스키마
+- field_naming: 필드 네이밍 제안
+- risks: 설계 리스크
 '''
 ```
 
 ------------------------------------------------------------------------
 
-## Example Input
+## 입력 예시
 
-    Design an API that returns models grouped by provider.
-
-------------------------------------------------------------------------
-
-## Expected Output
-
-    Endpoint: GET /api/v1/models
-    Response:
-    {
-      "providers": []
-    }
-
-------------------------------------------------------------------------
-
-### Day 4 Deliverable
-
-Agent can generate API spec drafts.
-
-------------------------------------------------------------------------
-
-# Day 5 --- Tool System
-
-## Goal
-
-Introduce **Tool-based Agent architecture**.
-
-------------------------------------------------------------------------
-
-## Tool Interface
-
-File:
-
-    app/tools/base.py
-
-Example:
-
-``` python
-class Tool:
-
-    name: str
-
-    async def run(self, input: dict):
-        pass
+```
+모델을 프로바이더별로 그룹화하여 반환하는 API를 설계해줘.
 ```
 
 ------------------------------------------------------------------------
 
-## API Template Tool
+## 기대 출력
 
-File:
+``` json
+{
+  "endpoint": "GET /api/v1/models",
+  "response_schema": {
+    "providers": [
+      {
+        "provider": "openai",
+        "models": []
+      }
+    ]
+  },
+  "field_naming": ["snake_case 사용", "복수형 컬렉션명"],
+  "risks": ["프로바이더 수 증가 시 페이지네이션 필요"]
+}
+```
 
-    app/tools/api_template_tool.py
+------------------------------------------------------------------------
 
-Example:
+### Day 4 결과물
+
+에이전트가 API 명세 초안을 생성할 수 있다.
+
+------------------------------------------------------------------------
+
+# Day 5 --- 도구 시스템
+
+## 목표
+
+**도구 기반 에이전트 아키텍처** 도입.
+
+------------------------------------------------------------------------
+
+## 도구 인터페이스
+
+파일: `app/tools/base.py`
+
+``` python
+class Tool:
+    name: str
+    description: str
+
+    async def run(self, input: dict) -> dict:
+        """도구를 실행하고 결과를 반환한다."""
+        raise NotImplementedError
+```
+
+------------------------------------------------------------------------
+
+## API 템플릿 도구
+
+파일: `app/tools/template_tool.py`
 
 ``` python
 class ApiTemplateTool(Tool):
-
     name = "api_template"
+    description = "표준 API 응답 형식 및 에러 포맷 템플릿 제공"
 
-    async def run(self, input):
-
+    async def run(self, input: dict) -> dict:
         return {
             "standard_error_format": {
                 "error_code": "string",
-                "message": "string"
+                "message": "string",
+                "details": "object | null"
+            },
+            "pagination_format": {
+                "items": "list",
+                "total": "int",
+                "page": "int",
+                "page_size": "int"
             }
         }
 ```
 
 ------------------------------------------------------------------------
 
-## Agent Tool Usage
+## 에이전트 도구 사용 흐름
 
-The agent may retrieve templates before calling the LLM.
-
-------------------------------------------------------------------------
-
-### Day 5 Deliverable
-
-Agent can call one tool.
+에이전트는 LLM 호출 전에 관련 도구를 통해 템플릿과 규칙을 조회할 수 있다.
+이를 통해 LLM이 도메인 특화 컨텍스트를 기반으로 더 정확한 출력을 생성한다.
 
 ------------------------------------------------------------------------
 
-# Day 6 --- Logging and Test Dataset
+### Day 5 결과물
 
-## Goal
-
-Add observability and reproducibility.
+에이전트가 하나의 도구를 호출하고 그 결과를 프롬프트에 반영할 수 있다.
 
 ------------------------------------------------------------------------
 
-## Request/Response Logging
+# Day 6-7 --- 로깅, 테스트 데이터셋, 데모 준비
 
-Create directory:
+## 목표
 
-    logs/
+관측성(observability)과 재현성(reproducibility)을 확보하고, 데모를 준비한다.
 
-Save:
+------------------------------------------------------------------------
 
-    request.json
-    response.json
+## 요청/응답 로깅
 
-Example:
+디렉토리: `logs/`
+
+저장 항목:
+
+- `request.json` — 사용자 요청 원본
+- `response.json` — 에이전트 응답 원본
 
 ``` python
 save_request(request)
@@ -447,88 +508,105 @@ save_response(response)
 
 ------------------------------------------------------------------------
 
-## Create Example Inputs
+## 예제 입력 생성
 
-Directory:
+디렉토리: `examples/`
 
-    examples/
+프로젝트 제안서의 4개 핵심 유스케이스에 맞춘 테스트 파일:
 
-Example files:
-
-    api_design_1.txt
-    rag_config_1.txt
-    error_case_1.txt
-
-These will be used to test agent outputs.
-
-------------------------------------------------------------------------
-
-### Day 6 Deliverable
-
-Agent requests and outputs are logged.
+| 파일 | 태스크 유형 | 설명 |
+|---|---|---|
+| `api_design_1.txt` | `api_design` | API 명세 작성 요청 |
+| `deployment_checklist_1.txt` | `deployment_checklist` | 배포 체크리스트 생성 요청 |
+| `code_review_1.txt` | `code_review` | 코드 리뷰 요청 |
+| `error_case_1.txt` | `error_analysis` | 에러 분석 요청 |
 
 ------------------------------------------------------------------------
 
-# Day 7 --- Demo Preparation
+## 데모 시나리오
 
-## Goal
+프로젝트 제안서 Section 5의 4개 유스케이스를 기반으로 최소 4개 시나리오를
+준비한다.
 
-Prepare a working demo.
+### 시나리오 1 --- API 명세 작성
 
-------------------------------------------------------------------------
+```
+모델을 프로바이더별로 그룹화하여 반환하는 API를 설계해줘.
+```
 
-## Test scenarios
+### 시나리오 2 --- 배포 체크리스트 생성
 
-Prepare at least three examples.
+```
+서비스: user-auth-service
+의존성: PostgreSQL, Redis, 외부 OAuth 프로바이더
+유형: 최초 배포
+```
 
-### Example 1 --- API design
+### 시나리오 3 --- 코드 리뷰
 
-    Create API for listing models grouped by provider
+```
+이 엔드포인트를 일관성 및 모범 사례 관점에서 리뷰해줘:
 
-### Example 2 --- RAG configuration
+@router.post("/users")
+async def create_user(data: dict):
+    user = db.execute(f"INSERT INTO users VALUES ('{data['name']}')")
+    return {"id": user.id}
+```
 
-    String field that needs filtering and sorting
+### 시나리오 4 --- 에러 분석
 
-### Example 3 --- Error troubleshooting
-
-    uv add faiss dependency error
-
-------------------------------------------------------------------------
-
-## Final tasks
-
--   Verify API endpoint
--   Validate structured output
--   Confirm tool usage
--   Document example requests
-
-------------------------------------------------------------------------
-
-# Week 1 Completion Criteria
-
-Week 1 is successful if:
-
--   Agent workflow is implemented
--   FastAPI endpoint works
--   Structured outputs are validated
--   One tool is integrated
--   API spec generation works
+```
+uv add faiss 의존성 해결 에러
+```
 
 ------------------------------------------------------------------------
 
-# Important Notes
+## 최종 확인
 
-Avoid over-engineering during Week 1.
+- API 엔드포인트 동작 확인
+- 구조화된 출력 스키마 검증 확인
+- 출력 검증 피드백 루프 동작 확인
+- 도구 사용 확인
+- 4개 유스케이스 데모 시나리오 실행
 
-Do NOT add:
+------------------------------------------------------------------------
 
--   Vector databases
--   Multi-agent orchestration
--   Complex planners
--   LangGraph / heavy frameworks
+# Week 1 완료 기준
 
-Focus on:
+프로젝트 제안서(Section 3)의 성공 기준과 정렬:
 
--   Clean architecture
--   Extensible design
--   Working MVP
+| 기준 | 목표 | Week 1 범위 |
+|---|---|---|
+| 유스케이스 커버리지 | 4개 핵심 유스케이스 완전 구현 | 최소 1개 완전 구현 + 나머지 스텁 |
+| 출력 유효성 | 응답 100%가 Pydantic 스키마 검증 통과 | 출력 파서 및 검증 루프 구현 |
+| 도구 통합 | 각 유스케이스가 최소 1개 도구 사용 | 최소 1개 도구 통합 완료 |
+| 응답 품질 | 실행 가능하고 도메인에 적합한 출력 | API 명세 유스케이스로 검증 |
+| 확장성 | 새 유스케이스 추가 시 3개 미만 파일 수정 | 확장 가능한 아키텍처 설계 확인 |
+
+Week 1은 다음 조건 충족 시 성공으로 간주한다:
+
+- 에이전트 워크플로우 (분류 → 프롬프트 → LLM → 출력 → 검증)가 구현됨
+- FastAPI 엔드포인트가 동작함
+- 구조화된 출력이 Pydantic 스키마로 검증됨
+- 검증 실패 시 피드백 루프 (재시도 또는 에러 응답)가 동작함
+- 하나의 도구가 통합됨
+- API 명세 생성 기능이 동작함
+
+------------------------------------------------------------------------
+
+# 주의사항
+
+Week 1에서는 과도한 엔지니어링을 피한다.
+
+추가하지 않는 것:
+
+- 벡터 데이터베이스
+- 멀티 에이전트 오케스트레이션
+- 복잡한 플래너
+- LangGraph / 무거운 프레임워크
+
+집중하는 것:
+
+- 깔끔한 아키텍처
+- 확장 가능한 설계
+- 동작하는 MVP
