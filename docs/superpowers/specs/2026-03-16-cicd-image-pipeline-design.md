@@ -9,6 +9,25 @@
 - **에이전트 오케스트레이션 패턴**: LLM 기반 계획 수립 + 도구 실행 + 실패 복구 루프
 - **CI/CD 도메인 지식**: 이미지 빌드, 레지스트리 관리, 컨테이너 배포 자동화
 
+## 범위
+
+### 포함
+- Git 레포지토리 클론 및 브랜치 체크아웃
+- 빌드 컨테이너에서 Docker 이미지 빌드
+- 클라우드 레지스트리(ECR, GCR, ACR) 인증 및 push
+- 이미지 wrapping (추가 레이어 + 플랫폼 재패키징) 및 재push
+- Docker Compose 기반 서버 배포 (SSH)
+
+### 제외 (Non-Goals)
+- Dockerfile 생성 — 레포지토리에 Dockerfile이 이미 존재한다고 가정
+- 빌드/배포 결과 리포팅 (향후 확장)
+- 멀티턴 대화 / 채팅 메모리
+- 프로덕션 수준 배포
+- 프론트엔드 UI
+
+### 기존 시스템과의 관계
+기존의 백엔드 엔지니어링 에이전트(API 설계, 배포 체크리스트, 코드 리뷰, 에러 분석)를 **완전히 대체**한다. 기존 코드는 참고만 하고 처음부터 새로 설계한다.
+
 ## 접근 방식: 하이브리드
 
 LLM이 자연어를 해석하여 실행 계획(plan)을 생성하고, 고정된 실행 엔진이 계획을 순서대로 수행한다. 실패 시에만 LLM이 재개입하여 복구 전략을 제안한다.
@@ -60,13 +79,14 @@ LLM이 자연어를 해석하여 실행 계획(plan)을 생성하고, 고정된 
 
 ```python
 class BuildRequest:
-    repository_url: str         # Git 레포지토리 URL
-    branch: str                 # 브랜치명
-    registry: str               # 대상 레지스트리 (ECR, GCR, ACR)
-    image_name: str             # 이미지 이름
-    image_tag: str              # 이미지 태그
-    wrap: WrapConfig | None     # wrapping 설정 (없으면 skip)
-    deploy: DeployConfig | None # 배포 설정 (없으면 skip)
+    repository_url: str             # Git 레포지토리 URL
+    branch: str                     # 브랜치명 (기본값: "main")
+    registry_type: str              # 레지스트리 종류 ("ecr", "gcr", "acr")
+    registry_url: str               # 레지스트리 전체 URL
+    image_name: str                 # 이미지 이름
+    image_tag: str                  # 이미지 태그 (기본값: "latest")
+    wrap: WrapConfig | None         # wrapping 설정 (없으면 skip)
+    deploy: DeployConfig | None     # 배포 설정 (없으면 skip)
 ```
 
 ### WrapConfig
@@ -83,6 +103,9 @@ class WrapConfig:
 ```python
 class DeployConfig:
     host: str                   # 배포 서버 주소
+    ssh_user: str               # SSH 사용자명
+    ssh_port: int               # SSH 포트 (기본값: 22)
+    ssh_key_path: str           # SSH 키 경로
     compose_file_path: str      # docker-compose 파일 경로
     service_name: str           # 업데이트할 서비스명
 ```
@@ -97,6 +120,7 @@ class PlanStep:
     name: str                   # clone, build, push, wrap, deploy
     tool: str                   # 실행할 Tool 이름
     parameters: dict            # Tool에 전달할 파라미터
+    max_retries: int            # 최대 재시도 횟수 (기본값: 3)
 ```
 
 ### StepResult — Tool 실행 결과
@@ -105,8 +129,18 @@ class PlanStep:
 class StepResult:
     step_name: str
     success: bool
+    attempt_number: int         # 시도 횟수 (1부터 시작)
     output: dict                # Tool 실행 결과
     error: str | None
+```
+
+### RecoveryAdvice — Recovery Advisor 출력
+
+```python
+class RecoveryAdvice:
+    recoverable: bool           # 복구 가능 여부
+    modified_parameters: dict | None  # 수정된 파라미터 (재시도 시 사용)
+    explanation: str            # 에러 분석 및 복구 전략 설명
 ```
 
 ## LLM 역할 분담
@@ -121,52 +155,104 @@ class StepResult:
 
 ### 3. Recovery Advisor
 
-Tool 실행 실패 시 에러 메시지를 분석하고 복구 전략을 제안한다. 복구 불가능한 경우 사용자에게 명확한 에러 리포트를 반환한다.
+Tool 실행 실패 시 에러 메시지를 분석하고 `RecoveryAdvice`를 반환한다:
+- `recoverable: true` → `modified_parameters`로 파라미터를 수정하여 재시도
+- `recoverable: false` → 실행 중단, `explanation`을 사용자에게 반환
+
+Recovery Advisor는 기존 step의 파라미터만 수정할 수 있으며, 새로운 step을 삽입하지는 않는다.
 
 ## Tools
 
 ### CloneTool
 - Git 레포지토리를 클론하고 지정된 브랜치를 체크아웃
-- 입력: `repository_url`, `branch`
-- 출력: 클론된 로컬 경로
+- 입력: `repository_url: str`, `branch: str`
+- 출력: `local_path: str` (클론된 로컬 경로)
+- 예상 에러: 인증 실패, 네트워크 타임아웃, 브랜치 미존재
 
 ### BuildTool
 - 빌드 전용 컨테이너를 띄워서 Docker 이미지 빌드
-- 입력: 소스 경로, `image_name`, `image_tag`
-- 출력: 빌드된 이미지 ID
+- 호스트의 Docker 소켓을 마운트하고, 소스 코드를 볼륨 마운트하여 표준 Docker CLI 이미지 컨테이너 내에서 빌드 수행
+- 입력: `source_directory_path: str`, `image_name: str`, `image_tag: str`
+- 출력: `image_id: str` (빌드된 이미지 ID)
+- 전제 조건: 레포지토리에 Dockerfile이 이미 존재해야 함
+- 예상 에러: Dockerfile 미존재, 빌드 명령 실패, 메모리 부족
 
 ### RegistryAuthTool
 - 클라우드 레지스트리(ECR/GCR/ACR) 인증 수행
-- 입력: `registry` 종류, 인증 정보 (환경변수에서 로드)
-- 출력: 인증 성공 여부
+- 입력: `registry_type: str`, `registry_url: str`
+- 출력: `authenticated: bool`
+- 예상 에러: 인증 정보 누락, 토큰 만료, 권한 부족
 
 ### PushTool
 - 빌드된 이미지를 레지스트리에 push
-- 입력: `image_name`, `image_tag`, `registry`
-- 출력: push된 이미지 URI
+- 입력: `image_name: str`, `image_tag: str`, `registry_url: str`
+- 출력: `image_uri: str` (push된 이미지 전체 URI)
+- 예상 에러: 인증 만료, 네트워크 에러, 이미지 크기 초과
 
 ### WrapTool
 - 기존 이미지 위에 추가 레이어 적용 + 플랫폼 재패키징
-- 입력: 원본 이미지, `base_layers`, `target_platform`, `target_registry`
-- 출력: wrapping된 이미지 URI
+- 입력: `source_image_uri: str`, `base_layers: list[str]`, `target_platform: str`, `target_registry_url: str`
+- 출력: `wrapped_image_uri: str` (wrapping된 이미지 URI)
+- 예상 에러: 원본 이미지 pull 실패, 레이어 빌드 실패
 
 ### DeployTool
 - SSH로 배포 서버 접속 후 docker-compose 서비스 업데이트
-- 입력: `host`, `compose_file_path`, `service_name`, 새 이미지 URI
-- 출력: 배포 성공 여부
+- 입력: `host: str`, `ssh_user: str`, `ssh_port: int`, `ssh_key_path: str`, `compose_file_path: str`, `service_name: str`, `image_uri: str`
+- 출력: `deployed: bool`
+- 예상 에러: SSH 연결 실패, 키 인증 실패, compose 파일 미존재, 서비스명 불일치
 
 ## 실행 엔진 동작 흐름
 
 1. ExecutionPlan의 step을 순서대로 실행
-2. 각 step의 결과는 다음 step의 입력으로 전달 (예: BuildTool 결과 이미지 ID → PushTool 입력)
-3. 실패 시 Recovery Advisor(LLM)에 에러 전달 → 복구 전략 수신 → 수정 후 재시도
+2. 실행 엔진은 `context: dict`를 유지하며 각 step의 출력을 누적 저장한다. 각 step의 `parameters`는 컨텍스트 값을 참조할 수 있다 (예: `${build.image_id}`)
+3. 실패 시 Recovery Advisor(LLM)에 에러 전달 → `RecoveryAdvice` 수신 → `modified_parameters`로 수정 후 재시도
 4. 재시도는 step당 최대 3회
-5. 복구 불가능 시 실행 중단 + 에러 반환
+5. 복구 불가능(`recoverable: false`) 시 실행 중단 + 에러 반환
 6. 모든 step 실행 로그는 보존
 
 ## 인증 방식
 
 현재는 환경변수 및 설정 파일에서 credential을 로드한다. 향후 시크릿 매니저(Vault, AWS Secrets Manager) 연동으로 확장 가능하다.
+
+### 레지스트리별 필요 환경변수
+
+| 레지스트리 | 환경변수 |
+|-----------|---------|
+| ECR | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` |
+| GCR | `GOOGLE_APPLICATION_CREDENTIALS` (서비스 계정 키 파일 경로) |
+| ACR | `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TENANT_ID` |
+
+### SSH 인증
+배포 서버 접속을 위한 SSH 설정은 `DeployConfig`의 `ssh_user`, `ssh_port`, `ssh_key_path` 필드로 관리한다.
+
+## API 엔드포인트
+
+### `POST /pipeline/run`
+
+자연어 요청을 받아 파이프라인을 실행한다.
+
+**요청:**
+```json
+{
+  "input": "github.com/myorg/api-server의 release/v2 브랜치를 빌드해서 ECR에 올려줘"
+}
+```
+
+**응답:**
+```json
+{
+  "plan": {
+    "steps": [...]
+  },
+  "results": [
+    {"step_name": "clone", "success": true, "attempt_number": 1, "output": {...}},
+    {"step_name": "build", "success": true, "attempt_number": 1, "output": {...}},
+    {"step_name": "registry_auth", "success": true, "attempt_number": 1, "output": {...}},
+    {"step_name": "push", "success": true, "attempt_number": 1, "output": {...}}
+  ],
+  "success": true
+}
+```
 
 ## 프로젝트 구조
 
