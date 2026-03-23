@@ -1,5 +1,8 @@
 # CI/CD 이미지 빌드 & 배포 파이프라인 에이전트 설계
 
+> **⚠️ SUPERSEDED**: 이 문서는 [2026-03-19 실행 레이어 설계 문서](2026-03-19-cicd-agent-execution-layer-design.md)로 대체되었습니다.
+> 주요 변경: 패키지 구조 (`app/` → `cicd_agent/`), 자격증명 격리 모델 추가, WrapTool 제거, ECR 전용, LLM 통합 호출 등.
+
 ## 개요
 
 자연어 요청을 받아 Git 레포지토리에서 Docker 이미지를 빌드하고, 클라우드 레지스트리에 push하며, 필요 시 이미지를 wrapping(추가 레이어 + 플랫폼 재패키징)한 후 재push하고, Docker Compose 기반 서버에 배포하는 AI 에이전트.
