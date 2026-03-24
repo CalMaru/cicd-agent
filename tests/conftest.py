@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from cicd_agent.config import get_settings
